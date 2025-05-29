@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+
+{% block title %}{% if form.instance.pk %}Edit Note{% else %}Upload Note{% endif %} - StudyMinds{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h2 class="card-title text-center mb-4">
+                        {% if form.instance.pk %}
+                            Edit Note
+                        {% else %}
+                            Upload New Note
+                        {% endif %}
+                    </h2>
+                    <form method="POST" enctype="multipart/form-data" novalidate>
+                        {% csrf_token %}
+                        
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                {{ form.title|as_crispy_field }}
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                {{ form.subject|as_crispy_field }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                {{ form.semester|as_crispy_field }}
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                {{ form.description|as_crispy_field }}
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                {{ form.tags|as_crispy_field }}
+                                <small class="form-text text-muted">
+                                    Enter tags separated by commas (e.g., "calculus, mathematics, engineering")
+                                </small>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                {{ form.file|as_crispy_field }}
+                                <small class="form-text text-muted">
+                                    Allowed file types: PDF, DOC, DOCX, TXT. Maximum size: 5MB
+                                </small>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-12 mb-4">
+                                <div class="form-check">
+                                    {{ form.is_private|as_crispy_field }}
+                                    <small class="form-text text-muted d-block">
+                                        Private notes are only visible to you
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                {% if form.instance.pk %}
+                                    <i class="fas fa-save me-2"></i>Save Changes
+                                {% else %}
+                                    <i class="fas fa-upload me-2"></i>Upload Note
+                                {% endif %}
+                            </button>
+                            <a href="{% url 'note-list' %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-times me-2"></i>Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+    // File size validation
+    document.querySelector('form').addEventListener('submit', function(e) {
+        const fileInput = document.querySelector('input[type="file"]');
+        if (fileInput.files.length > 0) {
+            const fileSize = fileInput.files[0].size;
+            const maxSize = 5 * 1024 * 1024; // 5MB
+            if (fileSize > maxSize) {
+                e.preventDefault();
+                alert('File size must not exceed 5MB');
+            }
+        }
+    });
+</script>
+{% endblock %}
+{% endblock %} 

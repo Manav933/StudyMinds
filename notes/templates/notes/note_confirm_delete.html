@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block title %}Delete Note - StudyMinds{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-body text-center">
+                    <h2 class="card-title mb-4">Delete Note</h2>
+                    <p class="text-muted mb-4">
+                        Are you sure you want to delete "{{ object.title }}"? This action cannot be undone.
+                    </p>
+                    <form method="POST">
+                        {% csrf_token %}
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-danger">
+                                <i class="fas fa-trash-alt me-2"></i>Delete Note
+                            </button>
+                            <a href="{% url 'note-detail' object.slug %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-times me-2"></i>Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

@@ -1,0 +1,280 @@
+{% extends "base.html" %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block title %}{{ note.title }} - StudyMinds{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <!-- Note Details -->
+        <div class="col-md-8">
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div>
+                            <h1 class="card-title h2">{{ note.title }}</h1>
+                            <p class="text-muted mb-0">
+                                <i class="fas fa-user me-1"></i>
+                                {{ note.uploaded_by.get_full_name|default:note.uploaded_by.username }}
+                            </p>
+                        </div>
+                        {% if user.is_authenticated and note.uploaded_by == user %}
+                            <div class="dropdown">
+                                <button class="btn btn-light" type="button" data-bs-toggle="dropdown">
+                                    <i class="fas fa-ellipsis-v"></i>
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end">
+                                    <li>
+                                        <a class="dropdown-item" href="{% url 'note-edit' note.slug %}">
+                                            <i class="fas fa-edit me-2"></i>Edit
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item text-danger" href="{% url 'note-delete' note.slug %}">
+                                            <i class="fas fa-trash-alt me-2"></i>Delete
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-4">
+                        <div class="d-flex gap-3 text-muted mb-3">
+                            <span><i class="fas fa-book me-1"></i>{{ note.subject }}</span>
+                            <span><i class="fas fa-graduation-cap me-1"></i>Semester {{ note.semester }}</span>
+                            <span><i class="fas fa-download me-1"></i>{{ note.download_count }} downloads</span>
+                            <span><i class="fas fa-clock me-1"></i>{{ note.uploaded_at|timesince }} ago</span>
+                        </div>
+                        <div class="mb-3">
+                            {% for tag in note.tags.all %}
+                                <span class="badge bg-secondary me-1">{{ tag.name }}</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <h5>Description</h5>
+                        <p class="card-text">{{ note.description }}</p>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <a href="{% url 'note-download' note.slug %}" class="btn btn-primary">
+                            <i class="fas fa-download me-2"></i>Download
+                        </a>
+                        {% if user.is_authenticated %}
+                            <button class="btn btn-outline-primary" id="bookmarkBtn" data-note-id="{{ note.slug }}">
+                                <i class="{% if user in note.bookmarked_by.all %}fas{% else %}far{% endif %} fa-bookmark me-2"></i>
+                                Bookmark
+                            </button>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Ratings Section -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <h5 class="card-title mb-4">Ratings & Reviews</h5>
+                    {% if user.is_authenticated and user != note.uploaded_by %}
+                        <form method="POST" action="{% url 'rate-note' note.slug %}" class="mb-4">
+                            {% csrf_token %}
+                            <div class="mb-3">
+                                <label class="form-label">Your Rating</label>
+                                <div class="star-rating">
+                                    {% for i in "12345"|make_list %}
+                                        <i class="far fa-star" data-rating="{{ i }}"></i>
+                                    {% endfor %}
+                                </div>
+                                <input type="hidden" name="stars" id="ratingInput" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="reviewInput" class="form-label">Your Review (optional)</label>
+                                <textarea class="form-control" id="reviewInput" name="review" rows="3"></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Submit Review</button>
+                        </form>
+                    {% endif %}
+
+                    <div class="reviews-list">
+                        {% for rating in note.ratings.all %}
+                            <div class="review mb-3 pb-3 border-bottom">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <div>
+                                        <h6 class="mb-0">{{ rating.user.get_full_name|default:rating.user.username }}</h6>
+                                        <div class="text-warning">
+                                            {% for i in "12345"|make_list %}
+                                                <i class="{% if i|add:'0' <= rating.stars %}fas{% else %}far{% endif %} fa-star"></i>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                    <small class="text-muted">{{ rating.created_at|timesince }} ago</small>
+                                </div>
+                                {% if rating.review %}
+                                    <p class="mb-0">{{ rating.review }}</p>
+                                {% endif %}
+                            </div>
+                        {% empty %}
+                            <p class="text-muted">No reviews yet. Be the first to review!</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Comments Section -->
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title mb-4">Comments</h5>
+                    {% if user.is_authenticated %}
+                        <form method="POST" action="{% url 'add-comment' note.slug %}" class="mb-4">
+                            {% csrf_token %}
+                            <div class="mb-3">
+                                <label for="commentInput" class="form-label">Your Comment</label>
+                                <textarea class="form-control" id="commentInput" name="content" rows="3" required></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Post Comment</button>
+                        </form>
+                    {% endif %}
+
+                    <div class="comments-list">
+                        {% for comment in note.comments.all %}
+                            <div class="comment mb-3">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <div>
+                                        <h6 class="mb-0">{{ comment.user.get_full_name|default:comment.user.username }}</h6>
+                                        <small class="text-muted">{{ comment.created_at|timesince }} ago</small>
+                                    </div>
+                                    {% if user == comment.user %}
+                                        <form method="POST" action="{% url 'delete-comment' comment.pk %}" class="d-inline">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-link text-danger p-0">
+                                                <i class="fas fa-trash-alt"></i>
+                                            </button>
+                                        </form>
+                                    {% endif %}
+                                </div>
+                                <p class="mb-0">{{ comment.content }}</p>
+                            </div>
+                        {% empty %}
+                            <p class="text-muted">No comments yet. Be the first to comment!</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-md-4">
+            <!-- Similar Notes -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <h5 class="card-title mb-3">Similar Notes</h5>
+                    {% for similar_note in similar_notes %}
+                        <div class="card mb-2">
+                            <div class="card-body">
+                                <h6 class="card-title">
+                                    <a href="{% url 'note-detail' similar_note.slug %}" class="text-decoration-none">
+                                        {{ similar_note.title }}
+                                    </a>
+                                </h6>
+                                <small class="text-muted">{{ similar_note.subject }}</small>
+                            </div>
+                        </div>
+                    {% empty %}
+                        <p class="text-muted">No similar notes found.</p>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Note Statistics -->
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title mb-3">Statistics</h5>
+                    <ul class="list-unstyled">
+                        <li class="mb-2">
+                            <i class="fas fa-download me-2"></i>
+                            {{ note.download_count }} downloads
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-star me-2"></i>
+                            {{ note.ratings.count }} ratings
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-comment me-2"></i>
+                            {{ note.comments.count }} comments
+                        </li>
+                        <li>
+                            <i class="fas fa-bookmark me-2"></i>
+                            {{ note.bookmarked_by.count }} bookmarks
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+    // Star Rating Functionality
+    document.querySelectorAll('.star-rating .far.fa-star').forEach(star => {
+        star.addEventListener('mouseover', function() {
+            const rating = this.dataset.rating;
+            document.querySelectorAll('.star-rating .fa-star').forEach(s => {
+                if (s.dataset.rating <= rating) {
+                    s.classList.remove('far');
+                    s.classList.add('fas');
+                } else {
+                    s.classList.remove('fas');
+                    s.classList.add('far');
+                }
+            });
+        });
+
+        star.addEventListener('click', function() {
+            const rating = this.dataset.rating;
+            document.getElementById('ratingInput').value = rating;
+        });
+    });
+
+    document.querySelector('.star-rating').addEventListener('mouseleave', function() {
+        const rating = document.getElementById('ratingInput').value;
+        document.querySelectorAll('.star-rating .fa-star').forEach(s => {
+            if (s.dataset.rating <= rating) {
+                s.classList.remove('far');
+                s.classList.add('fas');
+            } else {
+                s.classList.remove('fas');
+                s.classList.add('far');
+            }
+        });
+    });
+
+    // Bookmark Functionality
+    const bookmarkBtn = document.getElementById('bookmarkBtn');
+    if (bookmarkBtn) {
+        bookmarkBtn.addEventListener('click', function() {
+            const noteSlug = this.dataset.noteId;
+            fetch(`/notes/${noteSlug}/bookmark/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                const icon = this.querySelector('i');
+                if (data.bookmarked) {
+                    icon.classList.remove('far');
+                    icon.classList.add('fas');
+                } else {
+                    icon.classList.remove('fas');
+                    icon.classList.add('far');
+                }
+            });
+        });
+    }
+</script>
+{% endblock %}
+{% endblock %} 

@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block title %}Subjects - StudyMinds{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Browse by Subject</h2>
+        <div class="input-group w-auto">
+            <input type="text" id="subjectSearch" class="form-control" placeholder="Search subjects...">
+            <button class="btn btn-outline-secondary" type="button">
+                <i class="fas fa-search"></i>
+            </button>
+        </div>
+    </div>
+
+    <div class="row g-4" id="subjectsGrid">
+        {% for subject in subjects %}
+            <div class="col-md-6 col-lg-4 subject-card">
+                <a href="{% url 'subject-detail' subject.slug %}" class="text-decoration-none">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-body">
+                            <h3 class="card-title h4 text-primary">{{ subject.name }}</h3>
+                            <p class="card-subtitle mb-2 text-muted">{{ subject.course }}</p>
+                            <p class="card-text text-muted">{{ subject.description|truncatechars:150 }}</p>
+                            <div class="d-flex justify-content-between align-items-center mt-3">
+                                <div>
+                                    <span class="badge bg-primary me-2">
+                                        <i class="fas fa-file-alt me-1"></i>{{ subject.notes.count }} notes
+                                    </span>
+                                    <span class="badge bg-secondary">
+                                        <i class="fas fa-users me-1"></i>{{ subject.contributors_count }} contributors
+                                    </span>
+                                </div>
+                                <i class="fas fa-chevron-right text-muted"></i>
+                            </div>
+                        </div>
+                    </div>
+                </a>
+            </div>
+        {% empty %}
+            <div class="col-12">
+                <div class="alert alert-info text-center">
+                    <i class="fas fa-info-circle me-2"></i>No subjects available yet.
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+    // Subject search functionality
+    const subjectSearch = document.getElementById('subjectSearch');
+    const subjectCards = document.querySelectorAll('.subject-card');
+
+    subjectSearch.addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase();
+        
+        subjectCards.forEach(card => {
+            const title = card.querySelector('.card-title').textContent.toLowerCase();
+            const course = card.querySelector('.card-subtitle').textContent.toLowerCase();
+            const description = card.querySelector('.card-text').textContent.toLowerCase();
+            
+            if (title.includes(searchTerm) || course.includes(searchTerm) || description.includes(searchTerm)) {
+                card.style.display = '';
+            } else {
+                card.style.display = 'none';
+            }
+        });
+    });
+</script>
+{% endblock %}
+{% endblock %} 

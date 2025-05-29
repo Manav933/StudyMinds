@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}StudyMinds - Share and Learn Together{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<div class="container-fluid bg-primary text-white py-5 mb-5">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-md-6">
+                <h1 class="display-4 fw-bold mb-4">Share Knowledge, Grow Together</h1>
+                <p class="lead mb-4">Join our community of students sharing study notes, resources, and knowledge.</p>
+                {% if user.is_authenticated %}
+                    <a href="{% url 'note-upload' %}" class="btn btn-light btn-lg me-3">
+                        <i class="fas fa-upload me-2"></i>Share Notes
+                    </a>
+                {% else %}
+                    <a href="{% url 'register' %}" class="btn btn-light btn-lg me-3">
+                        <i class="fas fa-user-plus me-2"></i>Join Now
+                    </a>
+                {% endif %}
+                <a href="{% url 'note-list' %}" class="btn btn-outline-light btn-lg">
+                    <i class="fas fa-search me-2"></i>Browse Notes
+                </a>
+            </div>
+            <div class="col-md-6">
+                <img src="{% static 'img/hero-illustration.svg' %}" alt="Study Illustration" class="img-fluid">
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Features Section -->
+<div class="container mb-5">
+    <div class="row g-4">
+        <div class="col-md-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <i class="fas fa-book-reader fa-3x text-primary mb-3"></i>
+                    <h3 class="card-title h4">Quality Notes</h3>
+                    <p class="card-text text-muted">Access high-quality study materials verified by our community.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <i class="fas fa-users fa-3x text-primary mb-3"></i>
+                    <h3 class="card-title h4">Community Driven</h3>
+                    <p class="card-text text-muted">Join a supportive community of students helping each other succeed.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <i class="fas fa-mobile-alt fa-3x text-primary mb-3"></i>
+                    <h3 class="card-title h4">Easy Access</h3>
+                    <p class="card-text text-muted">Access your study materials anytime, anywhere, on any device.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Notes Section -->
+<div class="container mb-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Recent Notes</h2>
+        <a href="{% url 'note-list' %}" class="btn btn-outline-primary">View All</a>
+    </div>
+    <div class="row g-4">
+        {% for note in notes|slice:":6" %}
+            <div class="col-md-4">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ note.title }}</h5>
+                        <p class="card-text text-muted">{{ note.description|truncatechars:100 }}</p>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <small class="text-muted">{{ note.subject }}</small>
+                            <small class="text-muted">{{ note.uploaded_at|timesince }} ago</small>
+                        </div>
+                    </div>
+                    <div class="card-footer bg-transparent">
+                        <a href="{% url 'note-detail' note.slug %}" class="btn btn-sm btn-outline-primary">View Details</a>
+                    </div>
+                </div>
+            </div>
+        {% empty %}
+            <div class="col-12">
+                <div class="alert alert-info">No notes available yet.</div>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Popular Subjects Section -->
+<div class="container mb-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Popular Subjects</h2>
+        <a href="{% url 'subject-list' %}" class="btn btn-outline-primary">View All</a>
+    </div>
+    <div class="row g-4">
+        {% for subject in subjects|slice:":6" %}
+            <div class="col-md-4">
+                <a href="{% url 'subject-detail' subject.slug %}" class="text-decoration-none">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-body">
+                            <h5 class="card-title text-primary">{{ subject.name }}</h5>
+                            <p class="card-text text-muted">{{ subject.course }}</p>
+                            <small class="text-muted">{{ subject.notes.count }} notes available</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+        {% empty %}
+            <div class="col-12">
+                <div class="alert alert-info">No subjects available yet.</div>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %} 
